@@ -7,7 +7,7 @@
 namespace axiom {
 
 PeekBaccaratSimulator::PeekBaccaratSimulator(int shoe_count, BetType default_bet)
-    : shoe_count_(shoe_count), default_bet_(default_bet), reveal_weights_({0.59, 0.16, 0.15, 0.10}) {
+    : shoe_count_(shoe_count), default_bet_(default_bet), reveal_weights_({0.592, 0.16, 0.15, 0.098}) {
     rng_ = std::make_shared<RandomNumberGenerator>();
     shoe_ = std::make_unique<Shoe>(shoe_count_, rng_);
 }

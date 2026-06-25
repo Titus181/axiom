@@ -40,7 +40,6 @@ build_python/
 web/backend/reports/
 *.png
 *.svg
-*.html
 *.md
 !README.md
 !docs/*.md

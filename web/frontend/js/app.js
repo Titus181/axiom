@@ -29,6 +29,19 @@ function initTabs() {
 function initForm() {
     const btnRun = document.getElementById("btn-run");
     const spinner = document.getElementById("sim-spinner");
+    const timingInfo = document.getElementById("timing-info");
+    const timeStart = document.getElementById("time-start");
+    const timeEnd = document.getElementById("time-end");
+    const timeElapsed = document.getElementById("time-elapsed");
+
+    const formatTime = (date) => {
+        const pad = (n) => String(n).padStart(2, '0');
+        const padMs = (n) => String(n).padStart(3, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
+               `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}.${padMs(date.getMilliseconds())}`;
+    };
+
+    let elapsedTimer = null;
 
     btnRun.addEventListener("click", async () => {
         // 取得表單參數
@@ -37,10 +50,23 @@ function initForm() {
         const seed = parseInt(document.getElementById("seed").value);
         const betType = parseInt(document.querySelector('input[name="bet_type"]:checked').value);
 
-        // 設置 Loading 狀態
+        // 設置 Loading 狀態與顯示計時面板
         btnRun.disabled = true;
         spinner.style.display = "block";
         document.querySelector(".btn-text").textContent = "模擬計算中...";
+        
+        timingInfo.style.display = "flex";
+        const startTime = new Date();
+        timeStart.textContent = formatTime(startTime);
+        timeEnd.textContent = "運算中...";
+        timeElapsed.textContent = "0.00 秒";
+
+        // 每 50ms 更新一次累計耗時
+        elapsedTimer = setInterval(() => {
+            const now = new Date();
+            const diff = (now - startTime) / 1000;
+            timeElapsed.textContent = diff.toFixed(2) + " 秒";
+        }, 50);
 
         try {
             const response = await fetch("/api/simulate", {
@@ -63,16 +89,25 @@ function initForm() {
 
             const data = await response.json();
             
-            // 1. 更新卡片數據
+            // 1. 停止計時並顯示結束時間戳
+            clearInterval(elapsedTimer);
+            const endTime = new Date();
+            timeEnd.textContent = formatTime(endTime);
+            const totalDiff = (endTime - startTime) / 1000;
+            timeElapsed.textContent = totalDiff.toFixed(2) + " 秒";
+
+            // 2. 更新卡片數據
             updateMetrics(data.metrics);
 
-            // 2. 渲染 Chart.js 圖表
+            // 3. 渲染 Chart.js 圖表
             renderCharts(data.trends);
 
-            // 3. 讀取並渲染 Markdown 報告
+            // 4. 讀取並渲染 Markdown 報告
             await loadAndRenderReport(data.report_url);
 
         } catch (error) {
+            clearInterval(elapsedTimer);
+            timeEnd.textContent = "執行失敗";
             alert(`執行模擬出錯: ${error.message}`);
         } finally {
             // 恢復按鈕狀態

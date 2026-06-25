@@ -81,6 +81,20 @@
                         <span class="btn-text">開始數值模擬</span>
                         <div class="spinner" id="sim-spinner" style="display: none;"></div>
                     </button>
+                    <div id="timing-info" class="timing-info" style="display: none;">
+                        <div class="timing-row">
+                            <span class="timing-label">開始時間:</span>
+                            <span id="time-start" class="timing-val">--</span>
+                        </div>
+                        <div class="timing-row">
+                            <span class="timing-label">結束時間:</span>
+                            <span id="time-end" class="timing-val">--</span>
+                        </div>
+                        <div class="timing-row total-time">
+                            <span class="timing-label">累計耗時:</span>
+                            <span id="time-elapsed" class="timing-val">0.00 秒</span>
+                        </div>
+                    </div>
                 </form>
             </section>
 

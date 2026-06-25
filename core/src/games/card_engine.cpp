@@ -23,6 +23,7 @@ void Shoe::InitializeDeck() {
 }
 
 void Shoe::Shuffle() {
+    InitializeDeck();
     rng_->Shuffle(cards_);
     current_index_ = 0;
 }

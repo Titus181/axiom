@@ -42,4 +42,4 @@ web/backend/reports/
 *.svg
 *.md
 !README.md
-!docs/*.md
+!docs/**/*.md

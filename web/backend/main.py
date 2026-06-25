@@ -51,7 +51,7 @@ def run_simulation(req: SimulationRequest):
         # 1. 執行 C++ 模擬
         sim = pyaxiom.PeekBaccaratSimulator(8, req.bet_type)
         sim.set_seed(req.seed)
-        raw_results = sim.run_simulation(req.rounds)
+        raw_results = sim.run_simulation_summary(req.rounds, 300)
         
         # 2. 進行數據分析
         analyzer = SimulationAnalyzer(raw_results)

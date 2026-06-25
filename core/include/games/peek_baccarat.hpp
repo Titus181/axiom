@@ -18,6 +18,7 @@ public:
 
     // 實作 BaseSimulator 介面
     std::vector<SimulationResult> RunSimulation(uint64_t rounds) override;
+    SimulationSummary RunSimulationSummary(uint64_t rounds, int num_trend_points = 500) override;
     void SetSeed(uint64_t seed) override;
 
     // 設定與取得投注類型 (在 Python 中可調)

@@ -25,7 +25,7 @@ def main():
     rounds = 1000000
     print(f"[*] 開始執行 {rounds:,} 局 Monte Carlo 模擬...")
     start_time = time.time()
-    raw_results = sim.run_simulation(rounds)
+    raw_results = sim.run_simulation_summary(rounds, 1000)
     end_time = time.time()
     print(f"[✔] 模擬完成，耗時: {end_time - start_time:.4f} 秒")
     print(f"[*] 平均每秒模擬: {rounds / (end_time - start_time):,.0f} 局")

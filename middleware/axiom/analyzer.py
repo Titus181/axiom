@@ -4,27 +4,50 @@ import numpy as np
 class SimulationAnalyzer:
     def __init__(self, raw_results):
         """
-        傳入 C++ 模擬返回的原始結果列表
+        傳入 C++ 模擬返回的原始結果列表 (std::vector<SimulationResult> 或 SimulationSummary)
         """
-        # 轉換為 pandas DataFrame
-        self.df = pd.DataFrame([{
-            'round_id': r.round_id,
-            'bet_amount': r.bet_amount,
-            'peek_fee': r.peek_fee,
-            'raise_amount': r.raise_amount,
-            'win_loss': r.win_loss,
-            'game_status': r.game_status
-        } for r in raw_results])
-        
-        # 預先計算總投注 (包含主注 + 手續費 + 加注)
-        self.df['total_turnover'] = self.df['bet_amount'] + self.df['peek_fee'] + self.df['raise_amount']
-        # 返還金額 = 總投入 + 淨損益
-        self.df['payout'] = self.df['total_turnover'] + self.df['win_loss']
+        if hasattr(raw_results, "total_rounds"):
+            self.use_summary = True
+            self.summary = raw_results
+            self.df = None
+        else:
+            self.use_summary = False
+            # 轉換為 pandas DataFrame
+            self.df = pd.DataFrame([{
+                'round_id': r.round_id,
+                'bet_amount': r.bet_amount,
+                'peek_fee': r.peek_fee,
+                'raise_amount': r.raise_amount,
+                'win_loss': r.win_loss,
+                'game_status': r.game_status
+            } for r in raw_results])
+            
+            # 預先計算總投注 (包含主注 + 手續費 + 加注)
+            self.df['total_turnover'] = self.df['bet_amount'] + self.df['peek_fee'] + self.df['raise_amount']
+            # 返還金額 = 總投入 + 淨損益
+            self.df['payout'] = self.df['total_turnover'] + self.df['win_loss']
 
     def analyze_metrics(self) -> dict:
         """
         計算核心博弈指標
         """
+        if self.use_summary:
+            total_rounds = self.summary.total_rounds
+            return {
+                "total_rounds": int(total_rounds),
+                "total_bet": float(self.summary.total_bet),
+                "total_fee": float(self.summary.total_fee),
+                "total_raise": float(self.summary.total_raise),
+                "total_turnover": float(self.summary.total_turnover),
+                "total_win_loss": float(self.summary.total_win_loss),
+                "rtp": float(self.summary.rtp),
+                "volatility": float(self.summary.volatility),
+                "max_drawdown": float(self.summary.max_drawdown),
+                "banker_win_rate": float(self.summary.banker_wins / total_rounds) if total_rounds > 0 else 0,
+                "player_win_rate": float(self.summary.player_wins / total_rounds) if total_rounds > 0 else 0,
+                "tie_rate": float(self.summary.ties / total_rounds) if total_rounds > 0 else 0,
+            }
+
         if self.df.empty:
             return {}
 
@@ -76,6 +99,13 @@ class SimulationAnalyzer:
         """
         取得降採樣後的收斂趨勢數據 (用於前端繪製圖表)
         """
+        if self.use_summary:
+            return {
+                "rounds": list(self.summary.trend_rounds),
+                "rtp": list(self.summary.trend_rtps),
+                "balance": list(self.summary.trend_balances)
+            }
+
         if self.df.empty:
             return {"rounds": [], "rtp": [], "balance": []}
             

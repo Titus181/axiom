@@ -296,4 +296,147 @@ SimulationResult PeekBaccaratSimulator::PlayOneRound(uint64_t round_id) {
     return res;
 }
 
+SimulationSummary PeekBaccaratSimulator::RunSimulationSummary(uint64_t rounds, int num_trend_points) {
+    SimulationSummary summary{};
+    summary.total_rounds = rounds;
+    summary.banker_wins = 0;
+    summary.player_wins = 0;
+    summary.ties = 0;
+
+    // 確保趨勢點數合理且不為 0
+    if (num_trend_points <= 0) num_trend_points = 500;
+    uint64_t step = std::max<uint64_t>(1, rounds / num_trend_points);
+
+    // 預留趨勢點陣列記憶體空間，避免動態 re-allocation
+    summary.trend_rounds.reserve(num_trend_points + 2);
+    summary.trend_rtps.reserve(num_trend_points + 2);
+    summary.trend_balances.reserve(num_trend_points + 2);
+
+    double sum_win_loss = 0.0;
+    double sum_win_loss_sq = 0.0;
+    double current_profit = 0.0;
+    double max_profit = 0.0;
+    double max_drawdown = 0.0;
+
+    shoe_->Shuffle();
+
+    const double base_bet = 100.0;
+    const double peek_fee = base_bet * 0.20;
+
+    for (uint64_t i = 1; i <= rounds; ++i) {
+        if (shoe_->NeedsReshuffle()) {
+            shoe_->Shuffle();
+        }
+
+        // 輕量化單局運行 (無 detail string，極致高速)
+        std::vector<Card> player_hand = { shoe_->Draw(), shoe_->Draw() };
+        std::vector<Card> banker_hand = { shoe_->Draw(), shoe_->Draw() };
+
+        // 根據 reveal_weights_ 權重隨機決定揭牌張數
+        double r = rng_->NextDouble();
+        double weight_sum = 0.0;
+        for (double w : reveal_weights_) weight_sum += w;
+        double acc = 0.0;
+        int num_to_reveal = 1;
+        for (size_t k = 0; k < reveal_weights_.size(); ++k) {
+            acc += reveal_weights_[k] / weight_sum;
+            if (r <= acc) {
+                num_to_reveal = k + 1;
+                break;
+            }
+        }
+
+        std::vector<int> positions = { 0, 1, 2, 3 };
+        rng_->Shuffle(positions);
+        std::vector<bool> player_revealed(2, false);
+        std::vector<bool> banker_revealed(2, false);
+        for (int k = 0; k < num_to_reveal; ++k) {
+            int pos = positions[k];
+            if (pos < 2) {
+                player_revealed[pos] = true;
+            } else {
+                banker_revealed[pos - 2] = true;
+            }
+        }
+
+        int multiplier = MakeDecision(player_hand, banker_hand, player_revealed, banker_revealed);
+        double raise_amount = base_bet * multiplier;
+
+        auto [p_final, b_final] = EvaluateTableau(player_hand, banker_hand);
+
+        int winner = 2; // 0=庄, 1=閒, 2=和
+        if (p_final > b_final) {
+            winner = 1;
+        } else if (b_final > p_final) {
+            winner = 0;
+        }
+
+        double win_loss = 0.0;
+        double total_invested = base_bet + peek_fee + raise_amount;
+
+        if (default_bet_ == BetType::Player) {
+            if (winner == 1) {
+                win_loss = (base_bet + raise_amount) - peek_fee;
+                summary.player_wins++;
+            } else if (winner == 0) {
+                win_loss = -total_invested;
+                summary.banker_wins++;
+            } else {
+                win_loss = -peek_fee;
+                summary.ties++;
+            }
+        } else {
+            if (winner == 0) {
+                win_loss = (base_bet + raise_amount) * 0.95 - peek_fee;
+                summary.banker_wins++;
+            } else if (winner == 1) {
+                win_loss = -total_invested;
+                summary.player_wins++;
+            } else {
+                win_loss = -peek_fee;
+                summary.ties++;
+            }
+        }
+
+        // 累計數據
+        summary.total_bet += base_bet;
+        summary.total_fee += peek_fee;
+        summary.total_raise += raise_amount;
+        summary.total_turnover += total_invested;
+        summary.total_win_loss += win_loss;
+
+        // 用於標準差計算
+        sum_win_loss += win_loss;
+        sum_win_loss_sq += win_loss * win_loss;
+
+        // 計算最大回撤
+        current_profit += win_loss;
+        max_profit = std::max(max_profit, current_profit);
+        max_drawdown = std::max(max_drawdown, max_profit - current_profit);
+
+        // 降採樣儲存趨勢點
+        if (i % step == 0 || i == rounds) {
+            summary.trend_rounds.push_back(i);
+            double current_rtp = (summary.total_turnover + summary.total_win_loss) / summary.total_turnover;
+            summary.trend_rtps.push_back(current_rtp);
+            summary.trend_balances.push_back(current_profit);
+        }
+    }
+
+    // 計算最後的 RTP、標準差與最大回撤
+    if (summary.total_turnover > 0) {
+        summary.rtp = (summary.total_turnover + summary.total_win_loss) / summary.total_turnover;
+    } else {
+        summary.rtp = 0.0;
+    }
+
+    double mean = sum_win_loss / rounds;
+    double variance = (sum_win_loss_sq / rounds) - (mean * mean);
+    summary.volatility = std::sqrt(std::max(0.0, variance)) / 100.0; // 以主注 100 為基準化
+
+    summary.max_drawdown = max_drawdown;
+
+    return summary;
+}
+
 } // namespace axiom

@@ -155,6 +155,11 @@ function updateMetrics(m) {
     document.getElementById("val-turnover").textContent = `總投入資金: $${m.total_turnover.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     document.getElementById("val-volatility").textContent = m.volatility.toFixed(4);
     document.getElementById("val-mdd").textContent = `$${m.max_drawdown.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    
+    // 更新莊閒和佔比
+    document.getElementById("val-banker-rate").textContent = (m.banker_win_rate * 100).toFixed(2) + "%";
+    document.getElementById("val-player-rate").textContent = (m.player_win_rate * 100).toFixed(2) + "%";
+    document.getElementById("val-tie-rate").textContent = (m.tie_rate * 100).toFixed(2) + "%";
 }
 
 // 4. 使用 Chart.js 畫圖

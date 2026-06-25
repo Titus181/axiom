@@ -374,6 +374,9 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 1.5rem;
+    height: 380px;
+    display: flex;
+    flex-direction: column;
 }
 
 .chart-wrapper h3 {
@@ -382,6 +385,12 @@ body {
     font-weight: 600;
     margin-bottom: 1rem;
     color: var(--text-secondary);
+}
+
+.chart-wrapper canvas {
+    flex-grow: 1;
+    width: 100% !important;
+    height: 100% !important;
 }
 
 /* Markdown Viewer */

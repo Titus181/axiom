@@ -1,7 +1,19 @@
+---
+title: "Project Axiom: 看牌百家樂 (Peek Baccarat) 遊戲規則與數值設計說明書"
+version: v2.1.0
+date: 2026-06-25
+author: Axiom Game Math Team
+tags:
+  - axiom
+  - baccarat
+  - game-design
+  - rtp-simulation
+---
+
 # Project Axiom: 看牌百家樂 (Peek Baccarat) 遊戲規則與數值設計說明書
 
 > [!NOTE]
-> 本文件詳述了 **Project Axiom** 第一階段驗證核心「看牌百家樂」的遊戲規則、特有机制、加注最優策略及 10 億局數值模擬之收斂指標，供產品經理 (PM) 與數值企劃參考。
+> 本文件詳述了 **Project Axiom** 第一階段驗證核心「看牌百家樂」的遊戲規則、特有機制、加注最優策略及 10 億局數值模擬之收斂指標，供產品經理 (PM) 與數值企劃參考。
 
 ---
 

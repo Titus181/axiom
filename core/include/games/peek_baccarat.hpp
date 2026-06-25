@@ -24,11 +24,15 @@ public:
     void SetBetType(int bet_type);
     [[nodiscard]] int GetBetType() const;
 
+    // 設定揭牌張數的權重分佈 (必須有 4 個元素，分別代表 1, 2, 3, 4 張牌)
+    void SetRevealWeights(const std::vector<double>& weights);
+
 private:
     int shoe_count_;
     BetType default_bet_;
     std::shared_ptr<RandomNumberGenerator> rng_;
     std::unique_ptr<Shoe> shoe_;
+    std::vector<double> reveal_weights_; // 1, 2, 3, 4 張牌的揭露權重
 
     // 核心單局執行邏輯
     SimulationResult PlayOneRound(uint64_t round_id);

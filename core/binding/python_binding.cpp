@@ -24,5 +24,6 @@ PYBIND11_MODULE(pyaxiom, m) {
         .def("run_simulation", &axiom::PeekBaccaratSimulator::RunSimulation, "Run Monte Carlo simulation", py::arg("rounds"))
         .def("set_seed", &axiom::PeekBaccaratSimulator::SetSeed, "Set seed for RNG", py::arg("seed"))
         .def("set_bet_type", &axiom::PeekBaccaratSimulator::SetBetType, "Set active bet type (0=Banker, 1=Player)", py::arg("bet_type"))
-        .def("get_bet_type", &axiom::PeekBaccaratSimulator::GetBetType, "Get current bet type");
+        .def("get_bet_type", &axiom::PeekBaccaratSimulator::GetBetType, "Get current bet type")
+        .def("set_reveal_weights", &axiom::PeekBaccaratSimulator::SetRevealWeights, "Set reveal count weights (1,2,3,4)", py::arg("weights"));
 }

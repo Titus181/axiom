@@ -7,7 +7,7 @@
 namespace axiom {
 
 PeekBaccaratSimulator::PeekBaccaratSimulator(int shoe_count, BetType default_bet)
-    : shoe_count_(shoe_count), default_bet_(default_bet) {
+    : shoe_count_(shoe_count), default_bet_(default_bet), reveal_weights_({0.59, 0.16, 0.15, 0.10}) {
     rng_ = std::make_shared<RandomNumberGenerator>();
     shoe_ = std::make_unique<Shoe>(shoe_count_, rng_);
 }
@@ -23,6 +23,12 @@ void PeekBaccaratSimulator::SetBetType(int bet_type) {
 
 int PeekBaccaratSimulator::GetBetType() const {
     return static_cast<int>(default_bet_);
+}
+
+void PeekBaccaratSimulator::SetRevealWeights(const std::vector<double>& weights) {
+    if (weights.size() == 4) {
+        reveal_weights_ = weights;
+    }
 }
 
 std::vector<SimulationResult> PeekBaccaratSimulator::RunSimulation(uint64_t rounds) {
@@ -179,8 +185,19 @@ SimulationResult PeekBaccaratSimulator::PlayOneRound(uint64_t round_id) {
     std::vector<Card> player_hand = { shoe_->Draw(), shoe_->Draw() };
     std::vector<Card> banker_hand = { shoe_->Draw(), shoe_->Draw() };
 
-    // 3. 隨機揭牌機制 (Reveal 1 to 4 cards)
-    int num_to_reveal = rng_->NextInt(1, 4);
+    // 3. 隨機揭牌機制 (根據 reveal_weights_ 權重隨機揭露 1 到 4 張牌)
+    double r = rng_->NextDouble();
+    double sum = 0.0;
+    for (double w : reveal_weights_) sum += w;
+    double acc = 0.0;
+    int num_to_reveal = 1;
+    for (size_t i = 0; i < reveal_weights_.size(); ++i) {
+        acc += reveal_weights_[i] / sum;
+        if (r <= acc) {
+            num_to_reveal = i + 1;
+            break;
+        }
+    }
     
     // 建立 4 個位置的索引，並洗牌決定揭露哪些位置
     std::vector<int> positions = { 0, 1, 2, 3 }; // 0,1 為閒家；2,3 為莊家

@@ -1,0 +1,46 @@
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Build directories
+build/
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+*.so
+*.pyd
+*.dylib
+*.dll
+*.lib
+*.obj
+*.o
+*.a
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+dist/
+build_python/
+*.egg-info/
+
+# Development Tools
+.vscode/
+.idea/
+.agents/
+.gemini/
+
+# Output Reports
+web/backend/reports/
+*.png
+*.svg
+*.html
+*.md
+!README.md
+!docs/*.md

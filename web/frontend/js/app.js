@@ -41,6 +41,25 @@ function initForm() {
                `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}.${padMs(date.getMilliseconds())}`;
     };
 
+    const formatDuration = (seconds) => {
+        if (seconds < 60) {
+            return seconds.toFixed(2) + " 秒";
+        }
+        const days = Math.floor(seconds / 86400);
+        seconds %= 86400;
+        const hours = Math.floor(seconds / 3600);
+        seconds %= 3600;
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        
+        let res = "";
+        if (days > 0) res += days + " 天 ";
+        if (hours > 0 || days > 0) res += hours + " 小時 ";
+        if (minutes > 0 || hours > 0 || days > 0) res += minutes + " 分 ";
+        res += secs.toFixed(2) + " 秒";
+        return res;
+    };
+
     let elapsedTimer = null;
 
     btnRun.addEventListener("click", async () => {
@@ -65,7 +84,7 @@ function initForm() {
         elapsedTimer = setInterval(() => {
             const now = new Date();
             const diff = (now - startTime) / 1000;
-            timeElapsed.textContent = diff.toFixed(2) + " 秒";
+            timeElapsed.textContent = formatDuration(diff);
         }, 50);
 
         try {
@@ -94,7 +113,7 @@ function initForm() {
             const endTime = new Date();
             timeEnd.textContent = formatTime(endTime);
             const totalDiff = (endTime - startTime) / 1000;
-            timeElapsed.textContent = totalDiff.toFixed(2) + " 秒";
+            timeElapsed.textContent = formatDuration(totalDiff);
 
             // 2. 更新卡片數據
             updateMetrics(data.metrics);

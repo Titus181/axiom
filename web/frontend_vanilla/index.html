@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Axiom | 高效能通用博弈數值模擬中台</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Style -->
+    <link rel="stylesheet" href="css/style.css?v=1.0.2">
+    <!-- Chart.js & Marked.js (Local Fallback) -->
+    <script src="js/libs/chart.js"></script>
+    <script src="js/libs/marked.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <span class="logo-accent">Axiom</span>
+                <span class="logo-sub">Platform v2</span>
+            </div>
+            <div class="status-indicator">
+                <span class="dot active"></span>
+                <span class="status-text">C++ 模擬核心已連線</span>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <main class="app-main">
+            <!-- Sidebar Panel: Controls -->
+            <section class="control-panel panel">
+                <h2>模擬參數設定</h2>
+                <form id="sim-form" onsubmit="event.preventDefault();">
+                    <div class="form-group">
+                        <label for="game-type">選擇博弈模組</label>
+                        <select id="game-type" name="game_type">
+                            <option value="peek_baccarat">看牌百家樂 (Peek Baccarat)</option>
+                            <option value="dice" disabled>骰子點數模擬 (規劃中)</option>
+                            <option value="slots" disabled>老虎機模擬 (規劃中)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rounds">模擬局數 (Rounds)</label>
+                        <select id="rounds" name="rounds">
+                            <option value="10000">10,000 局 (極速)</option>
+                            <option value="100000" selected>100,000 局 (推薦)</option>
+                            <option value="1000000">1,000,000 局 (大數驗證)</option>
+                            <option value="5000000">5,000,000 局 (精確收斂)</option>
+                            <option value="10000000">10,000,000 局 (1000 萬)</option>
+                            <option value="50000000">50,000,000 局 (5000 萬)</option>
+                            <option value="100000000">100,000,000 局 (1 億)</option>
+                            <option value="500000000">500,000,000 局 (5 億)</option>
+                            <option value="1000000000">1,000,000,000 局 (10 億)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bet-type">主注投注方向</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="bet_type" value="1" checked>
+                                <span class="radio-button">閒家 (Player)</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="bet_type" value="0">
+                                <span class="radio-button">莊家 (Banker)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="seed">隨機數種子 (RNG Seed)</label>
+                        <input type="number" id="seed" name="seed" value="42" min="1">
+                    </div>
+
+                    <button type="button" id="btn-run" class="btn btn-primary">
+                        <span class="btn-text">開始數值模擬</span>
+                        <div class="spinner" id="sim-spinner" style="display: none;"></div>
+                    </button>
+                    <div id="timing-info" class="timing-info" style="display: none;">
+                        <div class="timing-row">
+                            <span class="timing-label">開始時間:</span>
+                            <span id="time-start" class="timing-val">--</span>
+                        </div>
+                        <div class="timing-row">
+                            <span class="timing-label">結束時間:</span>
+                            <span id="time-end" class="timing-val">--</span>
+                        </div>
+                        <div class="timing-row total-time">
+                            <span class="timing-label">累計耗時:</span>
+                            <span id="time-elapsed" class="timing-val">0.00 秒</span>
+                        </div>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Dashboard Center -->
+            <div class="dashboard-content">
+                <!-- Metrics Grid -->
+                <section class="metrics-grid">
+                    <div class="metric-card card-rtp">
+                        <div class="card-header">
+                            <span class="card-title">玩家回報率 (RTP)</span>
+                            <span class="card-icon">⚡</span>
+                        </div>
+                        <div class="card-value" id="val-rtp">--%</div>
+                        <div class="card-subtitle">理論完美策略值: 98.80%</div>
+                    </div>
+
+                    <div class="metric-card card-profit">
+                        <div class="card-header">
+                            <span class="card-title">累計淨損益 (Win/Loss)</span>
+                            <span class="card-icon">💰</span>
+                        </div>
+                        <div class="card-value" id="val-profit">$0.00</div>
+                        <div class="card-subtitle" id="val-turnover">總投入: $0.00</div>
+                    </div>
+
+                    <div class="metric-card card-volatility">
+                        <div class="card-header">
+                            <span class="card-title">波動率 (Volatility)</span>
+                            <span class="card-icon">📈</span>
+                        </div>
+                        <div class="card-value" id="val-volatility">0.0000</div>
+                        <div class="card-subtitle">數值穩定性指標</div>
+                    </div>
+
+                    <div class="metric-card card-mdd">
+                        <div class="card-header">
+                            <span class="card-title">最大回撤 (MDD)</span>
+                            <span class="card-icon">📉</span>
+                        </div>
+                        <div class="card-value" id="val-mdd">$0.00</div>
+                        <div class="card-subtitle">資產最大滑落幅度</div>
+                    </div>
+
+                    <div class="metric-card card-win-rates">
+                        <div class="card-header">
+                            <span class="card-title">對局勝率佔比</span>
+                            <span class="card-icon">📊</span>
+                        </div>
+                        <div class="card-value" id="val-win-rates" style="font-size: 1.15rem; font-family: inherit; line-height: 1.5; margin-top: 5px; font-weight: 500;">
+                            <div style="display: flex; justify-content: space-between;"><span>莊贏 (Banker):</span><span id="val-banker-rate" style="color: #f59e0b; font-weight: 700;">--%</span></div>
+                            <div style="display: flex; justify-content: space-between;"><span>閒贏 (Player):</span><span id="val-player-rate" style="color: #3b82f6; font-weight: 700;">--%</span></div>
+                            <div style="display: flex; justify-content: space-between;"><span>和局 (Tie):</span><span id="val-tie-rate" style="color: #10b981; font-weight: 700;">--%</span></div>
+                        </div>
+                        <div class="card-subtitle">實際模擬勝率分佈</div>
+                    </div>
+                </section>
+
+                <!-- Tabs for Charts & Report -->
+                <section class="tab-panel panel">
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="tab-charts">即時圖表分析</button>
+                        <button class="tab-btn" data-tab="tab-report">數值規格報告 (Markdown)</button>
+                    </div>
+
+                    <div class="tab-content active" id="tab-charts">
+                        <div class="chart-container">
+                            <div class="chart-wrapper" style="height: 380px; display: flex; flex-direction: column;">
+                                <h3>RTP 收斂曲線 (Monte Carlo)</h3>
+                                <canvas id="chart-rtp" style="max-height: 300px; flex-grow: 1;"></canvas>
+                            </div>
+                            <div class="chart-wrapper" style="height: 380px; display: flex; flex-direction: column;">
+                                <h3>累計淨收益曲線 (Asset Trend)</h3>
+                                <canvas id="chart-balance" style="max-height: 300px; flex-grow: 1;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="tab-report">
+                        <div id="report-viewer" class="markdown-body">
+                            <div class="empty-state">
+                                <p>尚未執行模擬。請在左側設定參數並點擊「開始數值模擬」以生成分析報告。</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <script src="js/app.js?v=1.0.2"></script>
+</body>
+</html>

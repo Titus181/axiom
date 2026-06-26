@@ -31,4 +31,7 @@ Axiom/
 
 ## 開發與編譯指南
 
-請參考各目錄下的說明文件以進行編譯與啟動。
+請參考以下說明文件以進行編譯與啟動：
+* 🚀 **[快速啟動指南 (Quickstart)](file:///Users/titus/Documents/GitHub/Axiom/docs/QUICKSTART.md)**：僅需幾步即可快速執行專案服務。
+* 📖 **[網頁服務啟動說明書 (Startup Guide)](file:///Users/titus/Documents/GitHub/Axiom/docs/STARTUP.md)**：包含 C++ 核心編譯、Python 依賴安裝、Vue 3 前端開發與生產打包的詳細環境配置指引。
+

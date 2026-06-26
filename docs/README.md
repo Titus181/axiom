@@ -24,6 +24,8 @@ tags:
 ```text
 docs/
 ├── README.md                           # 本導覽文件 (Obsidian 導航起點)
+├── QUICKSTART.md                       # 快速啟動指南 (服務一體化部署與開發)
+├── STARTUP.md                          # 網頁服務啟動與編譯詳細說明書
 ├── game_rules/
 │   └── peek_baccarat_rules.md          # 看牌百家樂規則與設計說明書
 ├── game_math/
@@ -37,6 +39,10 @@ docs/
 ## 🔗 Obsidian 快速導航連結
 
 您可以直接在 Obsidian 中點擊以下**雙向連結 (Wikilinks)** 跳轉至對應文件：
+
+### 🛠️ 0. 開發與部署指引 (新增)
+* 📄 **[[QUICKSTART|快速啟動指南]]**：一步啟用 Python 虛擬環境、前端打包、啟動 FastAPI 服務。
+* 📄 **[[STARTUP|網頁服務啟動與編譯詳細說明書]]**：包含 C++20 核心編譯 (`pybind11`)、中台依賴與 Vue 3 前端代理/打包等完整指引。
 
 ### 🎮 1. 遊戲玩法與規則設計
 * 📄 **[[game_rules/peek_baccarat_rules|看牌百家樂規則與設計說明書]]**
@@ -59,4 +65,5 @@ docs/
 2. **對於數值企劃與營運風控**：
    * 建議深入閱讀 **[[game_math/volatility_guide|博弈數值波動率與風險控制設計指南]]**，其中包含了賭場在上線該款中高波動率遊戲時，所需的儲備金控制與單日損益波動預期。
 3. **對於開發人員**：
+   * 建議閱讀 **[[QUICKSTART|快速啟動指南]]** 與 **[[STARTUP|網頁服務啟動與編譯詳細說明書]]** 進行本地環境安裝與啟動。
    * 本文件庫所引用的所有變數（如 `rtp`、`volatility`、`max_drawdown`）皆與 C++ 模擬核心、Python 數據中台無縫命名對齊，可直接作爲數值驗證的程式碼開發參考。

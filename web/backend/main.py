@@ -1,5 +1,7 @@
 import os
 import sys
+from typing import TYPE_CHECKING
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -9,14 +11,18 @@ from pydantic import BaseModel
 # 將中台目錄加入 Python 搜尋路徑
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "middleware")))
 
-try:
+if TYPE_CHECKING:
     import pyaxiom
     from axiom import SimulationAnalyzer, SimulationReporter
-except ImportError:
-    # 支援在尚未編譯安裝時加載，避免 FastAPI 初始化直接崩潰
-    pyaxiom = None
-    SimulationAnalyzer = None
-    SimulationReporter = None
+else:
+    try:
+        import pyaxiom
+        from axiom import SimulationAnalyzer, SimulationReporter
+    except ImportError:
+        # 支援在尚未編譯安裝時加載，避免 FastAPI 初始化直接崩潰
+        pyaxiom = None
+        SimulationAnalyzer = None
+        SimulationReporter = None
 
 app = FastAPI(title="Project Axiom 數值模擬中台", version="1.0.0")
 

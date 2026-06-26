@@ -33,7 +33,7 @@ ext_modules = [
         "pyaxiom",
         sources,
         include_dirs=include_dirs,
-        cxx_std=20, 
+        cxx_std=20,  # pyright: ignore[reportCallIssue]
     ),
 ]
 

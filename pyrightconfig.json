@@ -1,0 +1,11 @@
+{
+  "include": ["middleware", "web"],
+  "exclude": ["**/__pycache__", "build", "**/*.so"],
+  "extraPaths": ["middleware"],
+  "executionEnvironments": [
+    {
+      "root": "middleware",
+      "reportMissingModuleSource": "none"
+    }
+  ]
+}

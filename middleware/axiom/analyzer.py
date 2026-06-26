@@ -1,8 +1,20 @@
 import pandas as pd
 import numpy as np
+from typing import Any, Optional
+
+from pandas import DataFrame
+
+
+def _to_float(value: Any) -> float:
+    return float(value)
+
 
 class SimulationAnalyzer:
-    def __init__(self, raw_results):
+    use_summary: bool
+    summary: Any
+    df: Optional[DataFrame]
+
+    def __init__(self, raw_results: Any) -> None:
         """
         傳入 C++ 模擬返回的原始結果列表 (std::vector<SimulationResult> 或 SimulationSummary)
         """
@@ -48,26 +60,28 @@ class SimulationAnalyzer:
                 "tie_rate": float(self.summary.ties / total_rounds) if total_rounds > 0 else 0,
             }
 
-        if self.df.empty:
+        df = self.df
+        assert df is not None
+        if df.empty:
             return {}
 
-        total_rounds = len(self.df)
-        total_bet = self.df['bet_amount'].sum()
-        total_fee = self.df['peek_fee'].sum()
-        total_raise = self.df['raise_amount'].sum()
-        total_turnover = self.df['total_turnover'].sum()
-        total_win_loss = self.df['win_loss'].sum()
+        total_rounds = len(df)
+        total_bet = df['bet_amount'].sum()
+        total_fee = df['peek_fee'].sum()
+        total_raise = df['raise_amount'].sum()
+        total_turnover = df['total_turnover'].sum()
+        total_win_loss = df['win_loss'].sum()
         
         # RTP = 總返還 / 總投入
         rtp = (total_turnover + total_win_loss) / total_turnover if total_turnover > 0 else 0
         
         # 波動率 (以單局為單位)
         # 波動率 = 單局淨損益之標準差 / 單局主注金額 (通常以主注作為基準化)
-        volatility = self.df['win_loss'].std() / 100.0 if total_rounds > 1 else 0
+        volatility = df['win_loss'].std() / 100.0 if total_rounds > 1 else 0
         
         # 最大回撤 (Max Drawdown)
         # 計算資金累計曲線
-        cumulative_profit = self.df['win_loss'].cumsum()
+        cumulative_profit = df['win_loss'].cumsum()
         # 初始資金為 0，計算最高點
         running_max = cumulative_profit.cummax()
         # 回撤 = 最高點 - 當前點
@@ -75,21 +89,21 @@ class SimulationAnalyzer:
         max_drawdown = drawdown.max()
         
         # 統計各局狀態佔比 (0=莊贏, 1=閒贏, 2=和)
-        status_counts = self.df['game_status'].value_counts().to_dict()
+        status_counts = df['game_status'].value_counts().to_dict()
         banker_wins = status_counts.get(0, 0)
         player_wins = status_counts.get(1, 0)
         ties = status_counts.get(2, 0)
         
         return {
             "total_rounds": int(total_rounds),
-            "total_bet": float(total_bet),
-            "total_fee": float(total_fee),
-            "total_raise": float(total_raise),
-            "total_turnover": float(total_turnover),
-            "total_win_loss": float(total_win_loss),
-            "rtp": float(rtp),
-            "volatility": float(volatility),
-            "max_drawdown": float(max_drawdown),
+            "total_bet": _to_float(total_bet),
+            "total_fee": _to_float(total_fee),
+            "total_raise": _to_float(total_raise),
+            "total_turnover": _to_float(total_turnover),
+            "total_win_loss": _to_float(total_win_loss),
+            "rtp": _to_float(rtp),
+            "volatility": _to_float(volatility),
+            "max_drawdown": _to_float(max_drawdown),
             "banker_win_rate": float(banker_wins / total_rounds) if total_rounds > 0 else 0,
             "player_win_rate": float(player_wins / total_rounds) if total_rounds > 0 else 0,
             "tie_rate": float(ties / total_rounds) if total_rounds > 0 else 0,
@@ -106,15 +120,17 @@ class SimulationAnalyzer:
                 "balance": list(self.summary.trend_balances)
             }
 
-        if self.df.empty:
+        df = self.df
+        assert df is not None
+        if df.empty:
             return {"rounds": [], "rtp": [], "balance": []}
             
-        total_rounds = len(self.df)
+        total_rounds = len(df)
         step = max(1, total_rounds // num_points)
         
         # 計算累計指標
-        cum_win_loss = self.df['win_loss'].cumsum()
-        cum_turnover = self.df['total_turnover'].cumsum()
+        cum_win_loss = df['win_loss'].cumsum()
+        cum_turnover = df['total_turnover'].cumsum()
         cum_rtp = (cum_turnover + cum_win_loss) / cum_turnover
         
         # 降採樣
@@ -123,7 +139,7 @@ class SimulationAnalyzer:
             indices = np.append(indices, total_rounds - 1)
             
         return {
-            "rounds": self.df['round_id'].iloc[indices].tolist(),
+            "rounds": df['round_id'].iloc[indices].tolist(),
             "rtp": cum_rtp.iloc[indices].tolist(),
             "balance": cum_win_loss.iloc[indices].tolist()
         }
